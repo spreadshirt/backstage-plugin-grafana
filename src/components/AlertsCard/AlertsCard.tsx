@@ -52,7 +52,7 @@ const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
   );
 };
 
-export const AlertsTable = ({ title, showState, alerts }: { title: string, showState: boolean, alerts: GrafanaAlert[] }) => {
+export const AlertsTable = ({alerts, opts}: {alerts: GrafanaAlert[], opts: AlertsCardOpts}) => {
   const columns: TableColumn<GrafanaAlert>[] = [
     {
       title: 'id',
@@ -68,7 +68,7 @@ export const AlertsTable = ({ title, showState, alerts }: { title: string, showS
     },
   ];
 
-  if (showState) {
+  if (opts.showState) {
     columns.push({
       title: 'State',
       render: (row: GrafanaAlert): React.ReactNode => <AlertStatusBadge alert={row} />,
@@ -77,15 +77,23 @@ export const AlertsTable = ({ title, showState, alerts }: { title: string, showS
 
   return (
     <Table
-      title={title}
-      options={{ paging: false, search: false, sorting: false, draggable: false, padding: 'dense' }}
+      title={opts.title || 'Alerts'}
+      options={{
+        paging: opts.paged ?? false,
+        pageSize: opts.pageSize ?? 5,
+        search: opts.searchable ?? false,
+        emptyRowsWhenPaging: false,
+        sorting: false,
+        draggable: false,
+        padding: 'dense',
+      }}
       data={alerts}
       columns={columns}
     />
   );
 };
 
-const Alerts = ({ title, showState, entity }: { title: string, showState: boolean, entity: Entity }) => {
+const Alerts = ({entity, opts}: {entity: Entity, opts: AlertsCardOpts}) => {
   const grafanaApi = useApi(grafanaApiRef);
   const configApi = useApi(configApiRef);
   const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
@@ -99,17 +107,18 @@ const Alerts = ({ title, showState, entity }: { title: string, showState: boolea
     return <Alert severity="error">{error.message}</Alert>;
   }
 
-  return (
-    <AlertsTable title={title} showState={showState} alerts={value || []} />
-  );
+  return <AlertsTable alerts={value || []} opts={opts} />;
 };
 
-type AlertsCardProps = {
+export type AlertsCardOpts = {
+  paged?: boolean;
+  searchable?: boolean;
+  pageSize?: number;
   title?: string;
   showState?: boolean;
 };
 
-export const AlertsCard = ({ title = "Alerts", showState = true }: AlertsCardProps) => {
+export const AlertsCard = (opts?: AlertsCardOpts) => {
   const { entity } = useEntity();
   const configApi = useApi(configApiRef);
   const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
@@ -122,5 +131,5 @@ export const AlertsCard = ({ title = "Alerts", showState = true }: AlertsCardPro
     return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR} />;
   }
 
-  return <Alerts title={title} showState={showState && !unifiedAlertingEnabled} entity={entity} />;
+  return <Alerts entity={entity} opts={opts || {}} />;
 };
