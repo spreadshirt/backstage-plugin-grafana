@@ -51,14 +51,15 @@ const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
   );
 };
 
-export const AlertsTable = ({
-  alerts,
-  opts,
-}: {
-  alerts: GrafanaAlert[];
-  opts?: AlertsCardOpts;
-}) => {
+export const AlertsTable = ({alerts, opts}: {alerts: GrafanaAlert[], opts: AlertsCardOpts}) => {
   const columns: TableColumn<GrafanaAlert>[] = [
+    {
+      title: 'id',
+      field: 'name',
+      hidden: true,
+      searchable: true,
+      render: (row: GrafanaAlert): string => row.name,
+    },
     {
       title: 'id',
       field: 'name',
@@ -77,7 +78,7 @@ export const AlertsTable = ({
     },
   ];
 
-  if (showState) {
+  if (opts.showState) {
     columns.push({
       title: 'State',
       render: (row: GrafanaAlert): React.ReactNode => (
@@ -88,11 +89,11 @@ export const AlertsTable = ({
 
   return (
     <Table
-      title="Alerts"
+      title={opts.title || 'Alerts'}
       options={{
-        paging: opts?.paged ?? false,
-        pageSize: opts?.pageSize ?? 5,
-        search: opts?.searchable ?? false,
+        paging: opts.paged ?? false,
+        pageSize: opts.pageSize ?? 5,
+        search: opts.searchable ?? false,
         emptyRowsWhenPaging: false,
         sorting: false,
         draggable: false,
@@ -104,13 +105,7 @@ export const AlertsTable = ({
   );
 };
 
-const Alerts = ({
-  entity,
-  opts,
-}: {
-  entity: Entity;
-  opts?: AlertsCardOpts;
-}) => {
+const Alerts = ({entity, opts}: {entity: Entity, opts: AlertsCardOpts}) => {
   const grafanaApi = useApi(grafanaApiRef);
   const configApi = useApi(configApiRef);
   const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
@@ -125,14 +120,18 @@ const Alerts = ({
   }
 
   return <AlertsTable alerts={value || []} opts={opts} />;
+  return <AlertsTable alerts={value || []} opts={opts} />;
 };
 
 export type AlertsCardOpts = {
   paged?: boolean;
   searchable?: boolean;
   pageSize?: number;
+  title?: string;
+  showState?: boolean;
 };
 
+export const AlertsCard = (opts?: AlertsCardOpts) => {
 export const AlertsCard = (opts?: AlertsCardOpts) => {
   const { entity } = useEntity();
   const configApi = useApi(configApiRef);
@@ -146,9 +145,5 @@ export const AlertsCard = (opts?: AlertsCardOpts) => {
     return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR} />;
   }
 
-  return !isGrafanaAvailable(entity) ? (
-    <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
-  ) : (
-    <Alerts entity={entity} opts={opts} />
-  );
+  return <Alerts entity={entity} opts={opts || {}} />;
 };
