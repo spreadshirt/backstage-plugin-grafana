@@ -54,6 +54,13 @@ const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
 export const AlertsTable = ({alerts, opts}: {alerts: GrafanaAlert[], opts: AlertsCardOpts}) => {
   const columns: TableColumn<GrafanaAlert>[] = [
     {
+      title: 'id',
+      field: 'name',
+      hidden: true,
+      searchable: true,
+      render: (row: GrafanaAlert): string => row.name,
+    },
+    {
       title: 'Name',
       field: 'name',
       cellStyle: {width: '90%'},

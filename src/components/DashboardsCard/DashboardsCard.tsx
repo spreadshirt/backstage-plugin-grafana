@@ -29,6 +29,13 @@ import { dashboardSelectorFromEntity, GRAFANA_ANNOTATION_DASHBOARD_SELECTOR, isD
 export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, dashboards: Dashboard[], opts: DashboardCardOpts}) => {
   const columns: TableColumn<Dashboard>[] = [
     {
+      title: 'id',
+      field: 'title',
+      hidden: true,
+      searchable: true,
+      render: (row: Dashboard): string => row.title,
+    },
+    {
       title: 'Title',
       field: 'title',
       render: (row: Dashboard) => <Link to={row.url} target="_blank" rel="noopener">{row.title}</Link>,
