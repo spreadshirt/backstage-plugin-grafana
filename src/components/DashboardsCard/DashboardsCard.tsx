@@ -92,6 +92,7 @@ export type DashboardCardOpts = {
   pageSize?: number;
   sortable?: boolean;
   title?: string;
+  additionalDashboards?: (entity: Entity) => Dashboard[];
 };
 
 export const DashboardsCard = (opts?: DashboardCardOpts) => {
