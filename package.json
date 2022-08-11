@@ -63,5 +63,9 @@
     "dist",
     "config.d.ts"
   ],
+  "jest": {
+    "//": "FIXME; to make backstage skip testing this (errors out when used as git submodule)",
+    "roots": []
+  },
   "configSchema": "config.d.ts"
 }
