@@ -93,9 +93,14 @@ const Dashboards = ({
   opts?: DashboardCardOpts;
 }) => {
   const grafanaApi = useApi(grafanaApiRef);
-  const { value, loading, error } = useAsync(
-    async () => await grafanaApi.dashboardsByTag(tagSelectorFromEntity(entity)),
-  );
+  const { value, loading, error } = useAsync(async () => {
+    const grafanaDashboards = await grafanaApi.dashboardsByTag(tagSelectorFromEntity(entity));
+    if (opts?.additionalDashboards) {
+      grafanaDashboards.push(...opts.additionalDashboards(entity));
+    }
+
+    return grafanaDashboards;
+  });
 
   if (loading) {
     return <Progress />;
@@ -113,6 +118,7 @@ export type DashboardCardOpts = {
   searchable?: boolean;
   pageSize?: number;
   title?: string;
+  additionalDashboards?: (entity: Entity) => Dashboard[];
 };
 
 export const DashboardsCard = (opts?: DashboardCardOpts) => {
