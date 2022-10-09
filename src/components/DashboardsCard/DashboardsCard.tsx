@@ -24,7 +24,7 @@ import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
 import { Tooltip } from '@material-ui/core';
 import { Dashboard } from '../../types';
-import { GRAFANA_ANNOTATION_TAG_SELECTOR, isGrafanaAvailable, tagSelectorFromEntity } from '../grafanaData';
+import { GRAFANA_ANNOTATION_TAG_SELECTOR, isDashboardSelectorAvailable, tagSelectorFromEntity } from '../grafanaData';
 
 export const DashboardsTable = ({
   entity,
@@ -118,7 +118,7 @@ export type DashboardCardOpts = {
 export const DashboardsCard = (opts?: DashboardCardOpts) => {
   const { entity } = useEntity();
 
-  return !isGrafanaAvailable(entity) ? (
+  return !isDashboardSelectorAvailable(entity) ? (
     <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
   ) : (
     <Dashboards entity={entity} opts={opts} />

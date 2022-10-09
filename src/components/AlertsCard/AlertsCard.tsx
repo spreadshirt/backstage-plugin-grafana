@@ -18,12 +18,12 @@ import React from 'react';
 import { Progress, TableColumn, Table, StatusOK, StatusPending, StatusWarning, StatusError, StatusAborted, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { useEntity } from '@backstage/plugin-catalog-react';
-import { useApi } from '@backstage/core-plugin-api';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import { grafanaApiRef } from '../../api';
 import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
 import { Alert as GrafanaAlert } from '../../types';
-import { GRAFANA_ANNOTATION_TAG_SELECTOR, isGrafanaAvailable, tagSelectorFromEntity } from '../grafanaData';
+import { GRAFANA_ANNOTATION_TAG_SELECTOR, GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR, isAlertSelectorAvailable, isDashboardSelectorAvailable, tagSelectorFromEntity, alertSelectorFromEntity } from '../grafanaData';
 
 const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
   let statusElmt: React.ReactElement;
@@ -75,7 +75,10 @@ export const AlertsTable = ({
         </Link>
       ),
     },
-    {
+  ];
+
+  if (showState) {
+    columns.push({
       title: 'State',
       render: (row: GrafanaAlert): React.ReactNode => (
         <AlertStatusBadge alert={row} />
@@ -109,7 +112,11 @@ const Alerts = ({
   opts?: AlertsCardOpts;
 }) => {
   const grafanaApi = useApi(grafanaApiRef);
-  const { value, loading, error } = useAsync(async () => await grafanaApi.alertsByDashboardTag(tagSelectorFromEntity(entity)));
+  const configApi = useApi(configApiRef);
+  const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
+  const alertSelector = unifiedAlertingEnabled ? alertSelectorFromEntity(entity) : tagSelectorFromEntity(entity);
+
+  const { value, loading, error } = useAsync(async () => await grafanaApi.alertsForSelector(alertSelector));
 
   if (loading) {
     return <Progress />;
@@ -128,6 +135,16 @@ export type AlertsCardOpts = {
 
 export const AlertsCard = (opts?: AlertsCardOpts) => {
   const { entity } = useEntity();
+  const configApi = useApi(configApiRef);
+  const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
+
+  if (!unifiedAlertingEnabled && !isDashboardSelectorAvailable(entity)) {
+    return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />;
+  }
+
+  if (unifiedAlertingEnabled && !isAlertSelectorAvailable(entity)) {
+    return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR} />;
+  }
 
   return !isGrafanaAvailable(entity) ? (
     <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
