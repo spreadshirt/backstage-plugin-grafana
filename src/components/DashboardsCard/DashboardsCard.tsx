@@ -29,14 +29,7 @@ import { GRAFANA_ANNOTATION_TAG_SELECTOR, isDashboardSelectorAvailable, tagSelec
 export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, dashboards: Dashboard[], opts: DashboardCardOpts}) => {
   const columns: TableColumn<Dashboard>[] = [
     {
-      title: 'id',
-      field: 'title',
-      hidden: true,
-      searchable: true,
-      render: (row: Dashboard): string => row.title,
-    },
-    {
-      title: 'id',
+      title: 'Title',
       field: 'title',
       hidden: true,
       searchable: true,
@@ -48,9 +41,8 @@ export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, das
     },
     {
       title: 'Folder',
-      render: (row: Dashboard) => (
-        <Link to={row.folderUrl}>{row.folderTitle}</Link>
-      ),
+      field: 'folderTitle',
+      render: (row: Dashboard) => <Link href={row.folderUrl} target="_blank" rel="noopener">{row.folderTitle}</Link>,
     },
   ];
 
@@ -68,7 +60,7 @@ export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, das
         pageSize: opts.pageSize ?? 5,
         search: opts.searchable ?? false,
         emptyRowsWhenPaging: false,
-        sorting: false,
+        sorting: opts.sortable ?? false,
         draggable: false,
         padding: 'dense',
       }}
@@ -78,7 +70,7 @@ export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, das
   );
 };
 
-const Dashboards = ({entity, opts}: {entity: Entity, opts?: DashboardCardOpts}) => {
+const Dashboards = ({entity, opts}: {entity: Entity, opts: DashboardCardOpts}) => {
   const grafanaApi = useApi(grafanaApiRef);
   const { value, loading, error } = useAsync(async () => {
     const grafanaDashboards = await grafanaApi.dashboardsByTag(tagSelectorFromEntity(entity));
@@ -96,7 +88,7 @@ const Dashboards = ({entity, opts}: {entity: Entity, opts?: DashboardCardOpts}) 
   }
 
   return (
-    <DashboardsTable entity={entity} dashboards={value || []} opts={opts || {}} />
+    <DashboardsTable entity={entity} dashboards={value || []} opts={opts} />
   );
 };
 
@@ -104,6 +96,7 @@ export type DashboardCardOpts = {
   paged?: boolean;
   searchable?: boolean;
   pageSize?: number;
+  sortable?: boolean;
   title?: string;
 };
 
@@ -113,7 +106,6 @@ export const DashboardsCard = (opts?: DashboardCardOpts) => {
   return !isDashboardSelectorAvailable(entity) ? (
     <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
   ) : (
-    <Dashboards entity={entity} opts={opts} />
-    <Dashboards entity={entity} opts={opts} />
+    <Dashboards entity={entity} opts={opts || {}} />
   );
 };
