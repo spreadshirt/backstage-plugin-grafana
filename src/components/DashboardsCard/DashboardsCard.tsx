@@ -15,35 +15,28 @@
  */
 
 import React from 'react';
-import { Progress, TableColumn, Table, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
+import { Progress, TableColumn, Table, MissingAnnotationEmptyState } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { useApi } from '@backstage/core-plugin-api';
 import { grafanaApiRef } from '../../api';
 import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
-import { Tooltip } from '@material-ui/core';;
+import { Tooltip, Link } from '@material-ui/core';;
 import { Dashboard } from '../../types';
 import { GRAFANA_ANNOTATION_TAG_SELECTOR, isDashboardSelectorAvailable, tagSelectorFromEntity } from '../grafanaData';
 
 export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, dashboards: Dashboard[], opts: DashboardCardOpts}) => {
   const columns: TableColumn<Dashboard>[] = [
     {
-      title: 'id',
-      field: 'title',
-      hidden: true,
-      searchable: true,
-      render: (row: Dashboard): string => row.title,
-    },
-    {
       title: 'Title',
-      render: (row: Dashboard) => <Link to={row.url}>{row.title}</Link>,
+      field: 'title',
+      render: (row: Dashboard) => <Link href={row.url} target="_blank" rel="noopener">{row.title}</Link>,
     },
     {
       title: 'Folder',
-      render: (row: Dashboard) => (
-        <Link to={row.folderUrl}>{row.folderTitle}</Link>
-      ),
+      field: 'folderTitle',
+      render: (row: Dashboard) => <Link href={row.folderUrl} target="_blank" rel="noopener">{row.folderTitle}</Link>,
     },
   ];
 
@@ -61,7 +54,7 @@ export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, das
         pageSize: opts.pageSize ?? 5,
         search: opts.searchable ?? false,
         emptyRowsWhenPaging: false,
-        sorting: false,
+        sorting: opts.sortable ?? false,
         draggable: false,
         padding: 'dense',
       }}
@@ -71,7 +64,7 @@ export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, das
   );
 };
 
-const Dashboards = ({entity, opts}: {entity: Entity, opts?: DashboardCardOpts}) => {
+const Dashboards = ({entity, opts}: {entity: Entity, opts: DashboardCardOpts}) => {
   const grafanaApi = useApi(grafanaApiRef);
   const { value, loading, error } = useAsync(async () => await grafanaApi.dashboardsByTag(tagSelectorFromEntity(entity)));
 
@@ -82,7 +75,7 @@ const Dashboards = ({entity, opts}: {entity: Entity, opts?: DashboardCardOpts}) 
   }
 
   return (
-    <DashboardsTable entity={entity} dashboards={value || []} opts={opts || {}} />
+    <DashboardsTable entity={entity} dashboards={value || []} opts={opts} />
   );
 };
 
@@ -90,6 +83,7 @@ export type DashboardCardOpts = {
   paged?: boolean;
   searchable?: boolean;
   pageSize?: number;
+  sortable?: boolean;
   title?: string;
 };
 
@@ -99,6 +93,6 @@ export const DashboardsCard = (opts?: DashboardCardOpts) => {
   return !isDashboardSelectorAvailable(entity) ? (
     <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
   ) : (
-    <Dashboards entity={entity} opts={opts} />
+    <Dashboards entity={entity} opts={opts || {}} />
   );
 };
