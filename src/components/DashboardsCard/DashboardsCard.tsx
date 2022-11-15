@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { Progress, TableColumn, Table, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
+import { Progress, TableColumn, Table, MissingAnnotationEmptyState, Link, Link } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { useApi } from '@backstage/core-plugin-api';
@@ -31,18 +31,12 @@ export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, das
     {
       title: 'Title',
       field: 'title',
-      hidden: true,
-      searchable: true,
-      render: (row: Dashboard): string => row.title,
-    },
-    {
-      title: 'Title',
-      render: (row: Dashboard) => <Link to={row.url}>{row.title}</Link>,
+      render: (row: Dashboard) => <Link to={row.url} target="_blank" rel="noopener">{row.title}</Link>,
     },
     {
       title: 'Folder',
       field: 'folderTitle',
-      render: (row: Dashboard) => <Link href={row.folderUrl} target="_blank" rel="noopener">{row.folderTitle}</Link>,
+      render: (row: Dashboard) => <Link to={row.folderUrl} target="_blank" rel="noopener">{row.folderTitle}</Link>,
     },
   ];
 

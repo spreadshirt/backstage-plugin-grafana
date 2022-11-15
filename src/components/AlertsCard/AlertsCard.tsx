@@ -57,7 +57,7 @@ export const AlertsTable = ({alerts, opts}: {alerts: GrafanaAlert[], opts: Alert
       title: 'Name',
       field: 'name',
       cellStyle: {width: '90%'},
-      render: (row: GrafanaAlert): React.ReactNode => <Link href={row.url} target="_blank" rel="noopener">{row.name}</Link>,
+      render: (row: GrafanaAlert): React.ReactNode => <Link to={row.url} target="_blank" rel="noopener">{row.name}</Link>,
     },
   ];
 
