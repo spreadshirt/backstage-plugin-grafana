@@ -15,14 +15,13 @@
  */
 
 import React from 'react';
-import { Progress, TableColumn, Table, StatusOK, StatusPending, StatusWarning, StatusError, StatusAborted, MissingAnnotationEmptyState } from '@backstage/core-components';
+import { Progress, TableColumn, Table, StatusOK, StatusPending, StatusWarning, StatusError, StatusAborted, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { useApi } from '@backstage/core-plugin-api';
 import { grafanaApiRef } from '../../api';
 import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
-import { Link } from '@material-ui/core';
 import { Alert as GrafanaAlert } from '../../types';
 import { GRAFANA_ANNOTATION_TAG_SELECTOR, isGrafanaAvailable, tagSelectorFromEntity } from '../grafanaData';
 
@@ -71,11 +70,7 @@ export const AlertsTable = ({
       title: 'Name',
       cellStyle: { width: '90%' },
       render: (row: GrafanaAlert): React.ReactNode => (
-        <Link
-          href={`${row.url}?panelId=${row.panelId}&fullscreen&refresh=5s`}
-          target="_blank"
-          rel="noopener"
-        >
+        <Link to={`${row.url}?panelId=${row.panelId}&fullscreen&refresh=5s`}>
           {row.name}
         </Link>
       ),
