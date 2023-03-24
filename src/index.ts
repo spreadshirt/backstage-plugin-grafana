@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-export { DashboardViewer } from './components/DashboardViewer';
+export { DashboardViewer } from "./components/DashboardViewer";
 export {
   grafanaPlugin,
   EntityGrafanaDashboardsCard,
   EntityGrafanaAlertsCard,
   EntityOverviewDashboardViewer,
-} from './plugin';
+} from "./plugin";
 export {
   isDashboardSelectorAvailable,
   isAlertSelectorAvailable,
@@ -32,4 +32,5 @@ export {
   GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR,
   GRAFANA_ANNOTATION_TAG_SELECTOR,
   GRAFANA_ANNOTATION_OVERVIEW_DASHBOARD,
-} from './components/grafanaData';
+} from "./components/grafanaData";
+export type { Dashboard } from "./types";
