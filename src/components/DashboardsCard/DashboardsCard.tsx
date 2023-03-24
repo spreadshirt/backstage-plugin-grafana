@@ -24,40 +24,25 @@ import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
 import { Tooltip } from '@material-ui/core';
 import { Dashboard } from '../../types';
-import { GRAFANA_ANNOTATION_TAG_SELECTOR, isGrafanaAvailable, tagSelectorFromEntity } from '../grafanaData';
+import { dashboardSelectorFromEntity, GRAFANA_ANNOTATION_DASHBOARD_SELECTOR, isDashboardSelectorAvailable } from '../grafanaData';
 
-export const DashboardsTable = ({
-  entity,
-  dashboards,
-  opts,
-}: {
-  entity: Entity;
-  dashboards: Dashboard[];
-  opts?: DashboardCardOpts;
-}) => {
+export const DashboardsTable = ({entity, dashboards, opts}: {entity: Entity, dashboards: Dashboard[], opts: DashboardCardOpts}) => {
   const columns: TableColumn<Dashboard>[] = [
     {
-      title: 'id',
-      field: 'title',
-      hidden: true,
-      searchable: true,
-      render: (row: Dashboard): string => row.title,
-    },
-    {
       title: 'Title',
-      render: (row: Dashboard) => <Link to={row.url}>{row.title}</Link>,
+      field: 'title',
+      render: (row: Dashboard) => <Link to={row.url} target="_blank" rel="noopener">{row.title}</Link>,
     },
     {
       title: 'Folder',
-      render: (row: Dashboard) => (
-        <Link to={row.folderUrl}>{row.folderTitle}</Link>
-      ),
+      field: 'folderTitle',
+      render: (row: Dashboard) => <Link to={row.folderUrl} target="_blank" rel="noopener">{row.folderTitle}</Link>,
     },
   ];
 
   const titleElm = (
-    <Tooltip title={`Note: only dashboard with the "${tagSelectorFromEntity(entity)}" tag are displayed.`}>
-      <span>{opts?.title || 'Dashboards'}</span>
+    <Tooltip title={`Note: only dashboard with the "${dashboardSelectorFromEntity(entity)}" selector are displayed.`}>
+      <span>{opts.title || 'Dashboards'}</span>
     </Tooltip>
   );
 
@@ -65,11 +50,11 @@ export const DashboardsTable = ({
     <Table
       title={titleElm}
       options={{
-        paging: opts?.paged ?? false,
-        pageSize: opts?.pageSize ?? 5,
-        search: opts?.searchable ?? false,
+        paging: opts.paged ?? false,
+        pageSize: opts.pageSize ?? 5,
+        search: opts.searchable ?? false,
         emptyRowsWhenPaging: false,
-        sorting: false,
+        sorting: opts.sortable ?? false,
         draggable: false,
         padding: 'dense',
       }}
@@ -79,22 +64,15 @@ export const DashboardsTable = ({
   );
 };
 
-const Dashboards = ({
-  entity,
-  opts,
-}: {
-  entity: Entity;
-  opts?: DashboardCardOpts;
-}) => {
+const Dashboards = ({entity, opts}: {entity: Entity, opts: DashboardCardOpts}) => {
   const grafanaApi = useApi(grafanaApiRef);
   const { value, loading, error } = useAsync(async () => {
-    const grafanaDashboards = await grafanaApi.dashboardsByTag(tagSelectorFromEntity(entity));
+    const dashboards = await grafanaApi.listDashboards(dashboardSelectorFromEntity(entity))
     if (opts?.additionalDashboards) {
-      grafanaDashboards.push(...opts.additionalDashboards(entity));
+      dashboards.push(...opts.additionalDashboards(entity));
     }
-
-    return grafanaDashboards;
-  });
+    return dashboards
+  })
 
   if (loading) {
     return <Progress />;
@@ -111,6 +89,7 @@ export type DashboardCardOpts = {
   paged?: boolean;
   searchable?: boolean;
   pageSize?: number;
+  sortable?: boolean;
   title?: string;
   additionalDashboards?: (entity: Entity) => Dashboard[];
 };
@@ -118,9 +97,9 @@ export type DashboardCardOpts = {
 export const DashboardsCard = (opts?: DashboardCardOpts) => {
   const { entity } = useEntity();
 
-  return !isGrafanaAvailable(entity) ? (
-    <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
+  return !isDashboardSelectorAvailable(entity) ? (
+    <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_DASHBOARD_SELECTOR} />
   ) : (
-    <Dashboards entity={entity} opts={opts} />
+    <Dashboards entity={entity} opts={opts || {}} />
   );
 };

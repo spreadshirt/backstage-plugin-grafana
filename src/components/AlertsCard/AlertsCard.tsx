@@ -18,12 +18,12 @@ import React from 'react';
 import { Progress, TableColumn, Table, StatusOK, StatusPending, StatusWarning, StatusError, StatusAborted, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { useEntity } from '@backstage/plugin-catalog-react';
-import { useApi } from '@backstage/core-plugin-api';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import { grafanaApiRef } from '../../api';
 import { useAsync } from 'react-use';
 import { Alert } from '@material-ui/lab';
 import { Alert as GrafanaAlert } from '../../types';
-import { GRAFANA_ANNOTATION_TAG_SELECTOR, isGrafanaAvailable, tagSelectorFromEntity } from '../grafanaData';
+import { GRAFANA_ANNOTATION_TAG_SELECTOR, GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR, isAlertSelectorAvailable, isDashboardSelectorAvailable, tagSelectorFromEntity, alertSelectorFromEntity } from '../grafanaData';
 
 const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
   let statusElmt: React.ReactElement;
@@ -51,47 +51,32 @@ const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
   );
 };
 
-export const AlertsTable = ({
-  alerts,
-  opts,
-}: {
-  alerts: GrafanaAlert[];
-  opts?: AlertsCardOpts;
-}) => {
+export const AlertsTable = ({alerts, opts}: {alerts: GrafanaAlert[], opts: AlertsCardOpts}) => {
   const columns: TableColumn<GrafanaAlert>[] = [
     {
-      title: 'id',
-      field: 'name',
-      hidden: true,
-      searchable: true,
-      render: (row: GrafanaAlert): string => row.name,
-    },
-    {
       title: 'Name',
-      cellStyle: { width: '90%' },
-      render: (row: GrafanaAlert): React.ReactNode => (
-        <Link to={`${row.url}?panelId=${row.panelId}&fullscreen&refresh=5s`}>
-          {row.name}
-        </Link>
-      ),
-    },
-    {
-      title: 'State',
-      render: (row: GrafanaAlert): React.ReactNode => (
-        <AlertStatusBadge alert={row} />
-      ),
+      field: 'name',
+      cellStyle: {width: '90%'},
+      render: (row: GrafanaAlert): React.ReactNode => <Link to={row.url} target="_blank" rel="noopener">{row.name}</Link>,
     },
   ];
 
+  if (opts.showState) {
+    columns.push({
+      title: 'State',
+      render: (row: GrafanaAlert): React.ReactNode => <AlertStatusBadge alert={row} />,
+    });
+  }
+
   return (
     <Table
-      title="Alerts"
+      title={opts.title || 'Alerts'}
       options={{
-        paging: opts?.paged ?? false,
-        pageSize: opts?.pageSize ?? 5,
-        search: opts?.searchable ?? false,
+        paging: opts.paged ?? false,
+        pageSize: opts.pageSize ?? 5,
+        search: opts.searchable ?? false,
         emptyRowsWhenPaging: false,
-        sorting: false,
+        sorting: opts.sortable ?? false,
         draggable: false,
         padding: 'dense',
       }}
@@ -101,15 +86,13 @@ export const AlertsTable = ({
   );
 };
 
-const Alerts = ({
-  entity,
-  opts,
-}: {
-  entity: Entity;
-  opts?: AlertsCardOpts;
-}) => {
+const Alerts = ({entity, opts}: {entity: Entity, opts: AlertsCardOpts}) => {
   const grafanaApi = useApi(grafanaApiRef);
-  const { value, loading, error } = useAsync(async () => await grafanaApi.alertsByDashboardTag(tagSelectorFromEntity(entity)));
+  const configApi = useApi(configApiRef);
+  const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
+  const alertSelector = unifiedAlertingEnabled ? alertSelectorFromEntity(entity) : tagSelectorFromEntity(entity);
+
+  const { value, loading, error } = useAsync(async () => await grafanaApi.alertsForSelector(alertSelector));
 
   if (loading) {
     return <Progress />;
@@ -124,14 +107,25 @@ export type AlertsCardOpts = {
   paged?: boolean;
   searchable?: boolean;
   pageSize?: number;
+  sortable?: boolean;
+  title?: string;
+  showState?: boolean;
 };
 
 export const AlertsCard = (opts?: AlertsCardOpts) => {
   const { entity } = useEntity();
+  const configApi = useApi(configApiRef);
+  const unifiedAlertingEnabled = configApi.getOptionalBoolean('grafana.unifiedAlerting') || false;
 
-  return !isGrafanaAvailable(entity) ? (
-    <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />
-  ) : (
-    <Alerts entity={entity} opts={opts} />
-  );
+  if (!unifiedAlertingEnabled && !isDashboardSelectorAvailable(entity)) {
+    return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_TAG_SELECTOR} />;
+  }
+
+  if (unifiedAlertingEnabled && !isAlertSelectorAvailable(entity)) {
+    return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR} />;
+  }
+
+  const finalOpts = {...opts, ...{showState: opts?.showState && !unifiedAlertingEnabled}};
+
+  return <Alerts entity={entity} opts={finalOpts} />;
 };

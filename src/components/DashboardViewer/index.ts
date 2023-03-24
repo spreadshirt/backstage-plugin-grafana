@@ -14,14 +14,4 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { render } from '@testing-library/react';
-import { AlertsTable } from './AlertsCard';
-
-describe('AlertsTable', () => {
-  it('should render even with no alerts', async () => {
-    const rendered = render(<AlertsTable opts={{title: "alerts", showState: true}} alerts={[]} />);
-
-    expect(await rendered.findByText('No records to display')).toBeInTheDocument();
-  });
-});
+export { DashboardViewer, EntityDashboardViewer } from './DashboardViewer';
