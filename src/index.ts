@@ -34,3 +34,4 @@ export {
   GRAFANA_ANNOTATION_OVERVIEW_DASHBOARD,
 } from "./components/grafanaData";
 export type { Dashboard, Alert } from "./types";
+export { grafanaApiRef } from './api';
