@@ -30,16 +30,21 @@ const AlertStatusBadge = ({ alert }: { alert: GrafanaAlert }) => {
 
   switch (alert.state) {
     case "ok":
+    case "Normal":
       statusElmt = <StatusOK />;
       break;
     case "paused":
+    case "Pending":
       statusElmt = <StatusPending />;
       break;
     case "no_data":
     case "pending":
+    case 'NoData':
       statusElmt = <StatusWarning />;
       break;
     case "alerting":
+    case 'Alerting':
+    case 'Error':
       statusElmt = <StatusError />;
       break;
     default:
@@ -125,7 +130,7 @@ export const AlertsCard = (opts?: AlertsCardOpts) => {
     return <MissingAnnotationEmptyState annotation={GRAFANA_ANNOTATION_ALERT_LABEL_SELECTOR} />;
   }
 
-  const finalOpts = {...opts, ...{showState: opts?.showState && !unifiedAlertingEnabled}};
+  const finalOpts = {...opts, ...{showState: opts?.showState}};
 
   return <Alerts entity={entity} opts={finalOpts} />;
 };

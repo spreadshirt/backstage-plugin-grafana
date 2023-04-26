@@ -33,4 +33,4 @@ export {
   GRAFANA_ANNOTATION_TAG_SELECTOR,
   GRAFANA_ANNOTATION_OVERVIEW_DASHBOARD,
 } from "./components/grafanaData";
-export type { Dashboard } from "./types";
+export type { Dashboard, Alert } from "./types";
