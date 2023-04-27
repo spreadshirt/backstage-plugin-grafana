@@ -20,7 +20,27 @@ import { Alert, Dashboard } from './types';
 
 export interface GrafanaApi {
   listDashboards(query: string): Promise<Dashboard[]>;
-  alertsForSelector(selector: string): Promise<Alert[]>;
+  alertsForSelector(selectors: string | string[]): Promise<Alert[]>;
+}
+
+interface AggregatedAlertState {
+  Normal: number;
+  Pending: number;
+  Alerting: number;
+  NoData: number;
+  Error: number;
+  Invalid: number;
+}
+
+type AlertState = 'Normal' | 'Pending' | 'Alerting' | 'NoData' | 'Error' | 'n/a';
+
+interface AlertInstance {
+  labels: Record<string,string>;
+  state: AlertState;
+}
+
+interface AlertsData {
+  data: { alerts: AlertInstance[]};
 }
 
 interface AlertRuleGroupConfig {
@@ -187,19 +207,86 @@ export class UnifiedAlertingGrafanaApiClient implements GrafanaApi {
     return this.client.listDashboards(this.domain, query);
   }
 
-  async alertsForSelector(selector: string): Promise<Alert[]> {
-    const response = await this.client.fetch<Record<string, AlertRuleGroupConfig[]>>('/api/ruler/grafana/api/v1/rules');
-    const rules = Object.values(response).flat().map(ruleGroup => ruleGroup.rules).flat();
-    const [label, labelValue] = selector.split('=');
+  async alertsForSelector(selectors: string | string[]): Promise<Alert[]> {
+    let labelSelectors: string[] = []
+    if (typeof selectors === 'string') {
+      labelSelectors = [selectors]
+    } else {
+      labelSelectors = selectors
+    }
 
-    const matchingRules = rules.filter(rule => rule.labels && rule.labels[label] === labelValue);
+    const rulesResponse = await this.client.fetch<Record<string, AlertRuleGroupConfig[]>>('/api/ruler/grafana/api/v1/rules');
+    const rules = Object.values(rulesResponse).flat().map(ruleGroup => ruleGroup.rules).flat();
+    const alertsResponse = await this.client.fetch<AlertsData>('/api/prometheus/grafana/api/v1/alerts');
 
-    return matchingRules.map(rule => {
-      return {
-        name: rule.grafana_alert.title,
-        url: `${this.domain}/alerting/grafana/${rule.grafana_alert.uid}/view`,
-        state: "n/a",
-      };
-    })
+    return labelSelectors.map(selector => {
+      const [label, labelValue] = selector.split('=');
+
+      const matchingRules = rules.filter(rule => rule.labels && rule.labels[label] === labelValue);
+      const alertInstances = alertsResponse.data.alerts.filter(alertInstance => alertInstance.labels[label] === labelValue);
+  
+      return matchingRules.map(rule => {
+        const matchingAlertInstances = alertInstances.filter(
+          alertInstance => alertInstance.labels.alertname === rule.grafana_alert.title
+        );
+  
+        const aggregatedAlertStates: AggregatedAlertState = matchingAlertInstances.reduce(
+          (previous, alert) => {
+            switch (alert.state) {
+              case 'Normal':
+                previous.Normal += 1;
+                break;
+              case 'Pending':
+                previous.Pending += 1;
+                break;
+              case 'Alerting':
+                previous.Alerting += 1;
+                break;
+              case 'NoData':
+                previous.NoData += 1;
+                break;
+              case 'Error':
+                previous.Error += 1;
+                break;
+              default:
+                previous.Invalid += 1;
+            }
+      
+            return previous;
+          },
+          {
+            Normal: 0,
+            Pending: 0,
+            Alerting: 0,
+            NoData: 0,
+            Error: 0,
+            Invalid: 0,
+          },
+        );      
+  
+        return {
+          name: rule.grafana_alert.title,
+          url: `${this.domain}/alerting/grafana/${rule.grafana_alert.uid}/view`,
+          state: this.getState(aggregatedAlertStates, matchingAlertInstances.length),
+        };
+      })
+    }).flat()
+  }
+
+  private getState(states: AggregatedAlertState, totalAlerts: number): AlertState {
+    if (states.Alerting > 0) {
+      return "Alerting"
+    } else if (states.Error > 0) {
+      return 'Error'
+    } else if (states.Pending > 0) {
+      return 'Pending'
+    }
+    if (states.NoData === totalAlerts) {
+      return 'NoData'
+    } else if (states.Normal === totalAlerts || states.Normal + states.NoData === totalAlerts) {
+      return 'Normal'
+    } 
+
+    return 'n/a'
   }
 }
