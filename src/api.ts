@@ -188,7 +188,7 @@ export class GrafanaApiClient implements GrafanaApi {
       {
         name: alert.name,
         state: alert.state,
-        matchingSelector: "",
+        matchingSelector: dashboardTag,
         url: `${this.domain}${alert.url}?panelId=${alert.panelId}&fullscreen&refresh=30s`,
       }
     ));
