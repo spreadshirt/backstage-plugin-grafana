@@ -188,6 +188,7 @@ export class GrafanaApiClient implements GrafanaApi {
       {
         name: alert.name,
         state: alert.state,
+        matchingSelector: "",
         url: `${this.domain}${alert.url}?panelId=${alert.panelId}&fullscreen&refresh=30s`,
       }
     ));
@@ -267,6 +268,7 @@ export class UnifiedAlertingGrafanaApiClient implements GrafanaApi {
         return {
           name: rule.grafana_alert.title,
           url: `${this.domain}/alerting/grafana/${rule.grafana_alert.uid}/view`,
+          matchingSelector: selector,
           state: this.getState(aggregatedAlertStates, matchingAlertInstances.length),
         };
       })
