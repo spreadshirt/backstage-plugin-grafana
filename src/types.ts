@@ -25,5 +25,6 @@ export interface Dashboard {
 export interface Alert {
   name: string;
   state: string;
+  matchingSelector: string;
   url: string;
 }
