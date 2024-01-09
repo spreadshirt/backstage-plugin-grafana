@@ -15,8 +15,7 @@
  */
 
 import React from 'react';
-import { MissingAnnotationEmptyState } from '@backstage/core-components';
-import { useEntity } from '@backstage/plugin-catalog-react';
+import { MissingAnnotationEmptyState, useEntity } from '@backstage/plugin-catalog-react';
 import {
   GRAFANA_ANNOTATION_OVERVIEW_DASHBOARD,
   isOverviewDashboardAvailable,

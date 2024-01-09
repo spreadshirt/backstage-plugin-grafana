@@ -15,9 +15,9 @@
  */
 
 import React from 'react';
-import { Progress, TableColumn, Table, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
+import { Progress, TableColumn, Table, Link } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
-import { useEntity } from '@backstage/plugin-catalog-react';
+import { MissingAnnotationEmptyState, useEntity } from '@backstage/plugin-catalog-react';
 import { useApi } from '@backstage/core-plugin-api';
 import { grafanaApiRef } from '../../api';
 import { useAsync } from 'react-use';
