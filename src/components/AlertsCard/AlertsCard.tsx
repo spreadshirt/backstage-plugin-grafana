@@ -15,9 +15,9 @@
  */
 
 import React from 'react';
-import { Progress, TableColumn, Table, StatusOK, StatusPending, StatusWarning, StatusError, StatusAborted, MissingAnnotationEmptyState, Link } from '@backstage/core-components';
+import { Progress, TableColumn, Table, StatusOK, StatusPending, StatusWarning, StatusError, StatusAborted, Link } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
-import { useEntity } from '@backstage/plugin-catalog-react';
+import { MissingAnnotationEmptyState, useEntity } from '@backstage/plugin-catalog-react';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import { grafanaApiRef } from '../../api';
 import { useAsync } from 'react-use';
