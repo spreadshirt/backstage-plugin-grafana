@@ -1,3 +1,5 @@
+> :warning: **Project moved to Backstage community-plugins**: This package has been moved to the Backstage [community-plugins repo](https://github.com/backstage/community-plugins/tree/main/workspaces/grafana). If you were using this package in your project, please update the package references to `@backstage-community/plugin-grafana`.
+
 # Grafana plugin for Backstage
 
 The Grafana plugin is a frontend plugin that lists Grafana alerts and dashboards. It includes two components that can be integrated into Backstage:
